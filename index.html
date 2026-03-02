@@ -14,7 +14,7 @@
     <h2>🏥 เข้าสู่ระบบ</h2>
     <p>ระบบรายงานยอดออนไลน์</p>
     <div class="form-group">
-      <input type="text" id="username" class="form-input" placeholder="ชื่อผู้ใช้งาน (เช่น admin, icu, er)">
+      <input type="text" id="username" class="form-input" placeholder="ชื่อผู้ใช้งาน (รหัสตึก เช่น 13, 22, admin)">
     </div>
     <div class="form-group" style="margin-top: 1rem;">
       <input type="password" id="password" class="form-input" placeholder="รหัสผ่าน (ลองใส่: 1234)">
@@ -29,20 +29,18 @@
     <div class="logo">
       <div class="logo-icon">🏥</div>
       <div class="logo-text">
-        <h1>ระบบรายงานยอดออนไลน์ โรงพยาบาลชลบุรี</h1>
+        <h1>โรงพยาบาลชลบุรี</h1>
         <p>ONLINE CENSUS REPORT SYSTEM</p>
       </div>
     </div>
-    <div class="header-meta">
-      <div class="gs-status" id="gsStatus">
-        <span class="gs-dot" id="gsDot"></span>
-        <span id="gsLabel">ยังไม่เชื่อมต่อ</span>
+ <div class="gs-status" id="gsStatus">
+        <span class="gs-dot connected" id="gsDot"></span>
+        <span id="gsLabel" style="color: var(--teal);">เชื่อมต่อ Google Sheets แล้ว</span>
       </div>
       <div class="header-date" id="headerDate">--</div>
       
       <span id="displayUserName" style="font-size: 0.85rem; color: var(--gold); font-weight: 600; padding-right: 10px;"></span>
       
-      <button class="sync-btn" id="btnSetupGs" onclick="toggleSetup()">⚙ ตั้งค่า Google Sheets</button>
       <button class="sync-btn" onclick="syncToGoogleSheets()">↑ Sync</button>
       <button class="btn-cancel" style="padding: 6px 14px; border-color: var(--red); color: var(--red);" onclick="handleLogout()">ออกจากระบบ</button>
     </div>
@@ -52,21 +50,6 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <main id="mainContent" style="display: none;">
-  <div class="setup-panel" id="setupPanel">
-    <div class="setup-title">⚙ การตั้งค่า Google Sheets (Google Apps Script Web App URL)</div>
-    <div class="setup-row">
-      <div class="setup-field">
-        <span class="setup-label">Apps Script Web App URL</span>
-        <input class="setup-input" id="scriptUrl" placeholder="https://script.google.com/macros/s/YOUR_ID/exec">
-      </div>
-      <div class="setup-field" style="max-width:180px">
-        <span class="setup-label">Census</span>
-        <input class="setup-input" id="sheetName" value="Census" placeholder="Census">
-      </div>
-      <button class="btn-setup" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
-    </div>
-  </div>
-
   <div class="stats-grid">
     <div class="stat-card teal">
       <div class="stat-label">ผู้ป่วยคงเหลือ (ทุกเวร วันนี้)</div>
@@ -90,19 +73,61 @@
     </div>
   </div>
 
-  <div class="toolbar">
+ <div class="toolbar">
     <div class="toolbar-left">
       <div class="section-title">📋 <span>บันทึกออนไลน์</span></div>
       <div class="filter-group">
-        <button class="filter-btn active" onclick="filterShift('all', this)">ทั้งหมด</button>
-        <button class="filter-btn" onclick="filterShift('1', this)">เวร 1 (00-08)</button>
-        <button class="filter-btn" onclick="filterShift('2', this)">เวร 2 (08-16)</button>
-        <button class="filter-btn" onclick="filterShift('3', this)">เวร 3 (16-24)</button>
+        <button class="filter-btn active" onclick="filterShift('all', this)">ทั้งหมด (เวลา)</button>
+        <button class="filter-btn" onclick="filterShift('1', this)">เวร 1</button>
+        <button class="filter-btn" onclick="filterShift('2', this)">เวร 2</button>
+        <button class="filter-btn" onclick="filterShift('3', this)">เวร 3</button>
       </div>
+      
+      <select id="adminWardFilter" class="form-select" style="display:none; padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; width: auto; max-width: 200px; border-color: var(--teal);" onchange="filterWard(this.value)">
+        <option value="all">🏥 ดูทุกหน่วยงาน</option>
+        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยอายุรกรรม">
+          <option value="หอผู้ป่วย สก.3">หอผู้ป่วย สก.3</option>
+          <option value="หอผู้ป่วย สก.4">หอผู้ป่วย สก.4</option>
+          <option value="หอผู้ป่วย สก.5">หอผู้ป่วย สก.5</option>
+          <option value="หอผู้ป่วย สก.6">หอผู้ป่วย สก.6</option>
+          <option value="หอผู้ป่วยสงฆ์อาพาธ">หอผู้ป่วยสงฆ์อาพาธ</option>
+          <option value="หอผู้ป่วยสงฆ์พิเศษ 2+3">หอผู้ป่วยสงฆ์พิเศษ 2+3</option>
+          <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1</option>
+          <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2</option>
+          <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง">หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง</option>
+          <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน">หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน</option>
+          <option value="หอผู้ป่วย Low Immune ธนจ.4">หอผู้ป่วย Low Immune ธนจ.4</option>
+        </optgroup>
+        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยศัลยกรรม">
+          <option value="หอผู้ป่วยชลาทิศ 1">หอผู้ป่วยชลาทิศ 1</option>
+          <option value="หอผู้ป่วยชลาทิศ 2">หอผู้ป่วยชลาทิศ 2</option>
+          <option value="หอผู้ป่วยชลาทิศ 3">หอผู้ป่วยชลาทิศ 3</option>
+          <option value="หอผู้ป่วยชลาทิศ 4">หอผู้ป่วยชลาทิศ 4</option>
+          <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.7">หอผู้ป่วยพิเศษศัลยกรรม ฉ.7</option>
+          <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.8">หอผู้ป่วยพิเศษศัลยกรรม ฉ.8</option>
+          <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.9">หอผู้ป่วยพิเศษศัลยกรรม Ex.9</option>
+          <option value="หอผู้ป่วยแผลไหม้">หอผู้ป่วยแผลไหม้</option>
+          <option value="หอผู้ป่วยเคมีบำบัด">หอผู้ป่วยเคมีบำบัด</option>
+        </optgroup>
+        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยสูติ-นรีเวช">
+          <option value="หอผู้ป่วยหลังคลอด">หอผู้ป่วยหลังคลอด</option>
+          <option value="หอผู้ป่วยนรีเวช ชลารักษ์4">หอผู้ป่วยนรีเวช ชลารักษ์4</option>
+          <option value="หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4">หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4</option>
+        </optgroup>
+        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยออร์โธปิดิกส์">
+          <option value="หอผู้ป่วยกระดูกชาย">หอผู้ป่วยกระดูกชาย</option>
+          <option value="หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง">หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง</option>
+          <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.8">หอผู้ป่วยพิเศษศัลยกรรม Ex.8</option>
+        </optgroup>
+        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วย โสต ศอ นาสิก จักษุ">
+          <option value="หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3">หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3</option>
+          <option value="หอผู้ป่วยพิเศษ EENT">หอผู้ป่วยพิเศษ EENT</option>
+        </optgroup>
+      </select>
     </div>
-    <button class="btn-add" onclick="openModal()">＋ เพิ่มบันทึก</button>
+    
+    <button class="btn-add" id="btnAddRecord" onclick="openModal()">＋ เพิ่มบันทึก</button>
   </div>
-
   <div class="table-wrap">
     <table>
       <thead>
@@ -196,10 +221,24 @@
 
           <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยสูติ-นรีเวช">
             <option value="หอผู้ป่วยหลังคลอด">หอผู้ป่วยหลังคลอด</option>
-            </optgroup>
+            <option value="หอผู้ป่วยนรีเวช ชลารักษ์4">หอผู้ป่วยนรีเวช ชลารักษ์4</option>
+            <option value="หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4">หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4</option>
+          </optgroup>
+
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยออร์โธปิดิกส์">
+            <option value="หอผู้ป่วยกระดูกชาย">หอผู้ป่วยกระดูกชาย</option>
+            <option value="หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง">หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.8">หอผู้ป่วยพิเศษศัลยกรรม Ex.8</option>
+          </optgroup>
+
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วย โสต ศอ นาสิก จักษุ">
+            <option value="หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3">หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3</option>
+            <option value="หอผู้ป่วยพิเศษ EENT">หอผู้ป่วยพิเศษ EENT</option>
+          </optgroup>
           
         </select>
       </div>
+    </div>
 
     <div style="margin: 1rem 0 0.5rem; font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">
       ข้อมูลผู้ป่วย (Patient Census)
