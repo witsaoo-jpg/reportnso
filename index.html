@@ -124,6 +124,11 @@
           <option value="หอผู้ป่วยพิเศษ EENT">หอผู้ป่วยพิเศษ EENT</option>
         </optgroup>
       </select>
+      <div id="adminDateFilterWrap" style="display:none; align-items: center; gap: 5px;">
+        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">วันที่:</label>
+        <input type="date" id="adminDateFilter" class="form-input" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; width: auto; border-color: var(--teal);" onchange="filterAdminDate(this.value)">
+        <button onclick="clearDateFilter()" style="background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.75rem; font-weight: 600;">ล้างค่า</button>
+      </div>
     </div>
     
     <button class="btn-add" id="btnAddRecord" onclick="openModal()">＋ เพิ่มบันทึก</button>
