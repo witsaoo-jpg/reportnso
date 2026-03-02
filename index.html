@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายงานยอดออนไลน์ — โรงพยาบาลชลบุรี</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-box">
+    <h2>🏥 เข้าสู่ระบบ</h2>
+    <p>ระบบรายงานยอดออนไลน์</p>
+    <div class="form-group">
+      <input type="text" id="username" class="form-input" placeholder="ชื่อผู้ใช้งาน (เช่น admin, icu, er)">
+    </div>
+    <div class="form-group" style="margin-top: 1rem;">
+      <input type="password" id="password" class="form-input" placeholder="รหัสผ่าน (ลองใส่: 1234)">
+    </div>
+    <p id="loginError" class="error-msg">ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง</p>
+    <button onclick="handleLogin()" class="btn-save" style="width: 100%; margin-top: 1.5rem; justify-content: center;">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <div class="logo-text">
+        <h1>ระบบรายงานยอดออนไลน์ โรงพยาบาลชลบุรี</h1>
+        <p>ONLINE CENSUS REPORT SYSTEM</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="gs-status" id="gsStatus">
+        <span class="gs-dot" id="gsDot"></span>
+        <span id="gsLabel">ยังไม่เชื่อมต่อ</span>
+      </div>
+      <div class="header-date" id="headerDate">--</div>
+      
+      <span id="displayUserName" style="font-size: 0.85rem; color: var(--gold); font-weight: 600; padding-right: 10px;"></span>
+      
+      <button class="sync-btn" id="btnSetupGs" onclick="toggleSetup()">⚙ ตั้งค่า Google Sheets</button>
+      <button class="sync-btn" onclick="syncToGoogleSheets()">↑ Sync</button>
+      <button class="btn-cancel" style="padding: 6px 14px; border-color: var(--red); color: var(--red);" onclick="handleLogout()">ออกจากระบบ</button>
+    </div>
+  </div>
+</header>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<main id="mainContent" style="display: none;">
+  <div class="setup-panel" id="setupPanel">
+    <div class="setup-title">⚙ การตั้งค่า Google Sheets (Google Apps Script Web App URL)</div>
+    <div class="setup-row">
+      <div class="setup-field">
+        <span class="setup-label">Apps Script Web App URL</span>
+        <input class="setup-input" id="scriptUrl" placeholder="https://script.google.com/macros/s/YOUR_ID/exec">
+      </div>
+      <div class="setup-field" style="max-width:180px">
+        <span class="setup-label">Census</span>
+        <input class="setup-input" id="sheetName" value="Census" placeholder="Census">
+      </div>
+      <button class="btn-setup" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card teal">
+      <div class="stat-label">ผู้ป่วยคงเหลือ (ทุกเวร วันนี้)</div>
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-sub">จำนวนผู้ป่วยทั้งหมด</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">รับใหม่วันนี้</div>
+      <div class="stat-value" id="statAdmit">0</div>
+      <div class="stat-sub">ผู้ป่วยรับเข้า</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">จำหน่ายวันนี้</div>
+      <div class="stat-value" id="statDischarge">0</div>
+      <div class="stat-sub">ผู้ป่วยออก</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">บันทึกทั้งหมด</div>
+      <div class="stat-value" id="statRecords">0</div>
+      <div class="stat-sub">จำนวนรายการ</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="section-title">📋 <span>บันทึกออนไลน์</span></div>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="filterShift('all', this)">ทั้งหมด</button>
+        <button class="filter-btn" onclick="filterShift('1', this)">เวร 1 (00-08)</button>
+        <button class="filter-btn" onclick="filterShift('2', this)">เวร 2 (08-16)</button>
+        <button class="filter-btn" onclick="filterShift('3', this)">เวร 3 (16-24)</button>
+      </div>
+    </div>
+    <button class="btn-add" onclick="openModal()">＋ เพิ่มบันทึก</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>วันที่</th>
+          <th>เวร</th>
+          <th>หน่วยงาน</th>
+          <th>นอน</th>
+          <th>รับใหม่</th>
+          <th>จำหน่าย</th>
+          <th>ย้ายเข้า</th>
+          <th>ย้ายออก</th>
+          <th>เสียชีวิต</th>
+          <th>คงเหลือ</th>
+          <th>เตียง</th>
+          <th>HN</th>
+          <th>RN</th>
+          <th>TN/PN</th>
+          <th>NA</th>
+          <th>หมายเหตุ</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr>
+          <td colspan="17">
+            <div class="empty-state">
+              <div class="empty-icon">📝</div>
+              <p>ยังไม่มีข้อมูล กด "+ เพิ่มบันทึก" เพื่อเริ่มต้น</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">➕ เพิ่มบันทึกใหม่</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="editId">
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">วันที่ *</label>
+        <input type="date" class="form-input" id="fDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">เวร *</label>
+        <select class="form-select" id="fShift">
+          <option value="1">เวร 1 (00:00–08:00 น.)</option>
+          <option value="2">เวร 2 (08:00–16:00 น.)</option>
+          <option value="3">เวร 3 (16:00–24:00 น.)</option>
+        </select>
+      </div>
+      
+      <div class="form-group full">
+        <label class="form-label">หน่วยงาน / วอร์ด *</label>
+        <select class="form-select" id="fWard">
+          <option value="" disabled selected>-- กรุณาเลือกหน่วยงาน --</option>
+          
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยอายุรกรรม">
+            <option value="หอผู้ป่วย สก.3">หอผู้ป่วย สก.3</option>
+            <option value="หอผู้ป่วย สก.4">หอผู้ป่วย สก.4</option>
+            <option value="หอผู้ป่วย สก.5">หอผู้ป่วย สก.5</option>
+            <option value="หอผู้ป่วย สก.6">หอผู้ป่วย สก.6</option>
+            <option value="หอผู้ป่วยสงฆ์อาพาธ">หอผู้ป่วยสงฆ์อาพาธ</option>
+            <option value="หอผู้ป่วยสงฆ์พิเศษ 2+3">หอผู้ป่วยสงฆ์พิเศษ 2+3</option>
+            <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1</option>
+            <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2</option>
+            <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง">หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง</option>
+            <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน">หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน</option>
+            <option value="หอผู้ป่วย Low Immune ธนจ.4">หอผู้ป่วย Low Immune ธนจ.4</option>
+          </optgroup>
+
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยศัลยกรรม">
+            <option value="หอผู้ป่วยชลาทิศ 1">หอผู้ป่วยชลาทิศ 1</option>
+            <option value="หอผู้ป่วยชลาทิศ 2">หอผู้ป่วยชลาทิศ 2</option>
+            <option value="หอผู้ป่วยชลาทิศ 3">หอผู้ป่วยชลาทิศ 3</option>
+            <option value="หอผู้ป่วยชลาทิศ 4">หอผู้ป่วยชลาทิศ 4</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.7">หอผู้ป่วยพิเศษศัลยกรรม ฉ.7</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.8">หอผู้ป่วยพิเศษศัลยกรรม ฉ.8</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.9">หอผู้ป่วยพิเศษศัลยกรรม Ex.9</option>
+            <option value="หอผู้ป่วยแผลไหม้">หอผู้ป่วยแผลไหม้</option>
+            <option value="หอผู้ป่วยเคมีบำบัด">หอผู้ป่วยเคมีบำบัด</option>
+          </optgroup>
+
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยสูติ-นรีเวช">
+            <option value="หอผู้ป่วยหลังคลอด">หอผู้ป่วยหลังคลอด</option>
+            </optgroup>
+          
+        </select>
+      </div>
+
+    <div style="margin: 1rem 0 0.5rem; font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">
+      ข้อมูลผู้ป่วย (Patient Census)
+    </div>
+    <div class="form-grid" style="grid-template-columns: repeat(4,1fr); gap:0.75rem">
+      <div class="form-group">
+        <label class="form-label">นอนยกมา</label>
+        <input type="number" class="form-input" id="fBefore" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">รับใหม่</label>
+        <input type="number" class="form-input" id="fAdmit" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">จำหน่าย</label>
+        <input type="number" class="form-input" id="fDischarge" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ย้ายเข้า</label>
+        <input type="number" class="form-input" id="fTransIn" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ย้ายออก</label>
+        <input type="number" class="form-input" id="fTransOut" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">เสียชีวิต</label>
+        <input type="number" class="form-input" id="fDeath" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">คงเหลือ (คำนวณ)</label>
+        <input type="number" class="form-input" id="fRemain" readonly style="opacity:0.6">
+      </div>
+      <div class="form-group">
+        <label class="form-label">จำนวนเตียง</label>
+        <input type="number" class="form-input" id="fBed" min="0" value="0">
+      </div>
+    </div>
+
+    <div style="margin: 1rem 0 0.5rem; font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">
+      บุคลากร (Staff)
+    </div>
+    <div class="form-grid" style="grid-template-columns: repeat(4,1fr); gap:0.75rem">
+      <div class="form-group">
+        <label class="form-label">HN (แพทย์)</label>
+        <input type="number" class="form-input" id="fHN" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">RN (พยาบาล)</label>
+        <input type="number" class="form-input" id="fRN" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">TN/PN</label>
+        <input type="number" class="form-input" id="fTN" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">NA</label>
+        <input type="number" class="form-input" id="fNA" min="0" value="0">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:0.75rem">
+      <label class="form-label">หมายเหตุ</label>
+      <input type="text" class="form-input" id="fNote" placeholder="บันทึกเพิ่มเติม...">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-save" onclick="saveRecord()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
