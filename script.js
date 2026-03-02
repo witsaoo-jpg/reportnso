@@ -1,13 +1,17 @@
 // ==================== STATE ====================
 let records = JSON.parse(localStorage.getItem('census_records') || '[]');
-let settings = JSON.parse(localStorage.getItem('census_settings') || '{}');
 let currentFilter = 'all';
+let currentWardFilter = 'all'; // สำหรับให้แอดมินกรองตึก
 let editingId = null;
 
+// ฝัง URL ลงในโค้ดตรงนี้
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdiRVVO1pICoE1ELZESJdFtHq-X2v3IR4IXHAvdWaDZdgGH3wZUxP9cyvSkDi5ixc9Rg/exec";
+const GOOGLE_SHEET_NAME = "Census";
+
 // ==================== USERS DATABASE ====================
-// Username คือ "รหัสตัวเลข", รหัสผ่านคือ 1234
+// Username คือ "รหัสตึก", รหัสผ่านตั้งต้นคือ "1234"
 const APP_USERS = {
-  // บัญชี Admin
+  // --- บัญชี Admin ---
   "admin": { pass: "1234", role: "admin", name: "ผู้ดูแลระบบกลาง", ward: "all" },
   
   // --- กลุ่มงานการพยาบาลผู้ป่วยอายุรกรรม ---
@@ -35,8 +39,18 @@ const APP_USERS = {
   "34": { pass: "1234", role: "ward", name: "หอผู้ป่วยเคมีบำบัด", ward: "หอผู้ป่วยเคมีบำบัด" },
 
   // --- กลุ่มงานการพยาบาลผู้ป่วยสูติ-นรีเวช ---
-  "30": { pass: "1234", role: "ward", name: "หอผู้ป่วยหลังคลอด", ward: "หอผู้ป่วยหลังคลอด" }
-  // ใส่บรรทัดวอร์ดอื่นๆ เพิ่มต่อท้ายตรงนี้โดยใช้รูปแบบเดียวกันได้เลยครับ
+  "30": { pass: "1234", role: "ward", name: "หอผู้ป่วยหลังคลอด", ward: "หอผู้ป่วยหลังคลอด" },
+  "41": { pass: "1234", role: "ward", name: "หอผู้ป่วยนรีเวช ชลารักษ์4", ward: "หอผู้ป่วยนรีเวช ชลารักษ์4" },
+  "42": { pass: "1234", role: "ward", name: "หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4", ward: "หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4" },
+
+  // --- กลุ่มงานการพยาบาลผู้ป่วยออร์โธปิดิกส์ ---
+  "81": { pass: "1234", role: "ward", name: "หอผู้ป่วยกระดูกชาย", ward: "หอผู้ป่วยกระดูกชาย" },
+  "82": { pass: "1234", role: "ward", name: "หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง", ward: "หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง" },
+  "44": { pass: "1234", role: "ward", name: "หอผู้ป่วยพิเศษศัลยกรรม Ex.8", ward: "หอผู้ป่วยพิเศษศัลยกรรม Ex.8" },
+
+  // --- กลุ่มงานการพยาบาลผู้ป่วย โสต ศอ นาสิก จักษุ ---
+  "61": { pass: "1234", role: "ward", name: "หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3", ward: "หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3" },
+  "10": { pass: "1234", role: "ward", name: "หอผู้ป่วยพิเศษ EENT", ward: "หอผู้ป่วยพิเศษ EENT" }
 };
 
 // ==================== AUTH / LOGIN ====================
@@ -46,14 +60,16 @@ function checkAuth() {
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     
-    // แสดงชื่อผู้ใช้งาน
     document.getElementById('displayUserName').textContent = '👤 ' + sessionStorage.getItem('userName');
     
-    // ซ่อนปุ่มตั้งค่า Google Sheet ถ้าไม่ใช่ Admin
-    if (sessionStorage.getItem('userRole') !== 'admin') {
-      document.getElementById('btnSetupGs').style.display = 'none';
+    // ----- ส่วนจัดการสิทธิ์ Admin / Ward -----
+    const role = sessionStorage.getItem('userRole');
+    if (role === 'admin') {
+      document.getElementById('btnAddRecord').style.display = 'none'; // ซ่อนปุ่มเพิ่มบันทึก
+      document.getElementById('adminWardFilter').style.display = 'inline-block'; // โชว์ตัวกรองตึก
     } else {
-      document.getElementById('btnSetupGs').style.display = 'flex';
+      document.getElementById('btnAddRecord').style.display = 'flex'; // โชว์ปุ่มเพิ่มบันทึก
+      document.getElementById('adminWardFilter').style.display = 'none'; // ซ่อนตัวกรองตึก
     }
 
     initApp();
@@ -93,11 +109,14 @@ function handleLogout() {
 function initApp() {
   updateHeaderDate();
   setInterval(updateHeaderDate, 1000);
-  if (settings.scriptUrl) {
-    document.getElementById('scriptUrl').value = settings.scriptUrl;
-    document.getElementById('sheetName').value = settings.sheetName || 'Census';
-    setGsConnected(true);
+  
+  // บังคับให้สถานะเป็น "เชื่อมต่อแล้ว" ตลอดเวลา
+  // (ถ้าเอา ID gsDot ออกจาก HTML แล้วก็สามารถลบฟังก์ชันบรรทัดนี้ได้ครับ)
+  if(document.getElementById('gsDot')) {
+    document.getElementById('gsDot').className = 'gs-dot connected';
+    document.getElementById('gsLabel').textContent = 'เชื่อมต่อ Google Sheets แล้ว';
   }
+  
   renderTable();
   updateStats();
   document.getElementById('fDate').valueAsDate = new Date();
@@ -111,34 +130,7 @@ function updateHeaderDate() {
 }
 
 // ==================== GOOGLE SHEETS ====================
-function toggleSetup() {
-  const p = document.getElementById('setupPanel');
-  p.classList.toggle('open');
-}
-
-function saveSettings() {
-  const url = document.getElementById('scriptUrl').value.trim();
-  const name = document.getElementById('sheetName').value.trim() || 'Census';
-  if (!url) { showToast('กรุณาใส่ URL', 'error'); return; }
-  settings = { scriptUrl: url, sheetName: name };
-  localStorage.setItem('census_settings', JSON.stringify(settings));
-  setGsConnected(true);
-  showToast('บันทึกการตั้งค่าแล้ว ✓', 'success');
-}
-
-function setGsConnected(v) {
-  document.getElementById('gsDot').className = 'gs-dot' + (v ? ' connected' : '');
-  document.getElementById('gsLabel').textContent = v ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ';
-}
-
 async function syncToGoogleSheets() {
-  if (!settings.scriptUrl) {
-    showToast('กรุณาตั้งค่า Google Sheets ก่อน', 'error');
-    if(sessionStorage.getItem('userRole') === 'admin') {
-      document.getElementById('setupPanel').classList.add('open');
-    }
-    return;
-  }
   showToast('กำลัง Sync...', 'success');
   const rows = records.map(r => [
     r.date, shiftLabel(r.shift), r.ward,
@@ -146,10 +138,10 @@ async function syncToGoogleSheets() {
     r.hn, r.rn, r.tn, r.na, r.note
   ]);
   try {
-    const res = await fetch(settings.scriptUrl, {
+    const res = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'sync', sheetName: settings.sheetName, rows })
+      body: JSON.stringify({ action: 'sync', sheetName: GOOGLE_SHEET_NAME, rows })
     });
     showToast('Sync ไป Google Sheets สำเร็จ ✓', 'success');
   } catch (e) {
@@ -273,6 +265,9 @@ function saveRecord() {
   closeModal();
   renderTable();
   updateStats();
+  
+  // ให้วิ่งเข้า Google Sheets ทันทีที่บันทึก
+  syncToGoogleSheets();
 }
 
 function deleteRecord(id) {
@@ -282,6 +277,9 @@ function deleteRecord(id) {
   renderTable();
   updateStats();
   showToast('ลบรายการแล้ว', 'success');
+
+  // ให้อัปเดตลบใน Google Sheets ทันที
+  syncToGoogleSheets();
 }
 
 function filterShift(val, btn) {
@@ -289,6 +287,13 @@ function filterShift(val, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderTable();
+}
+
+// เพิ่มฟังก์ชันสำหรับให้แอดมินกรองตึก
+function filterWard(val) {
+  currentWardFilter = val;
+  renderTable();
+  updateStats(); 
 }
 
 // ==================== RENDER ====================
@@ -300,15 +305,19 @@ function renderTable() {
   // 1. กรองตามเวร (Shift)
   let filtered = currentFilter === 'all' ? records : records.filter(r => r.shift === currentFilter);
   
-  // 2. กรองตามสิทธิ์ (Role) - ถ้าไม่ใชแอดมิน ให้เห็นแค่ข้อมูลตึกตัวเอง
+  // 2. กรองตามสิทธิ์ (Role) และตัวกรองตึก
   if (userRole !== 'admin') {
-    filtered = filtered.filter(r => r.ward === userWard);
+    filtered = filtered.filter(r => r.ward === userWard); // พยาบาลตึก เห็นแค่ตึกตัวเอง
+  } else {
+    if (currentWardFilter !== 'all') {
+      filtered = filtered.filter(r => r.ward === currentWardFilter); // แอดมิน เลือกดูเฉพาะตึก
+    }
   }
 
   filtered = [...filtered].sort((a,b) => b.date.localeCompare(a.date) || a.shift - b.shift);
 
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="17"><div class="empty-state"><div class="empty-icon">📝</div><p>ไม่มีข้อมูล${currentFilter!=='all'?' สำหรับเวรที่เลือก':''}</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="17"><div class="empty-state"><div class="empty-icon">📝</div><p>ไม่มีข้อมูลตามเงื่อนไขที่เลือก</p></div></td></tr>`;
     return;
   }
 
@@ -352,9 +361,13 @@ function updateStats() {
   const userWard = sessionStorage.getItem('userWard');
   
   let targetRecords = records;
-  // กรองสถิติให้ตรงกับตึกของ User ด้วย
+  
   if (userRole !== 'admin') {
     targetRecords = records.filter(r => r.ward === userWard);
+  } else {
+    if (currentWardFilter !== 'all') {
+      targetRecords = records.filter(r => r.ward === currentWardFilter);
+    }
   }
 
   const todayRecs = targetRecords.filter(r => r.date === today);
