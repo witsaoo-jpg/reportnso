@@ -145,7 +145,8 @@
           <th>เตียง</th>
           <th>HN</th>
           <th>RN</th>
-          <th>TN/PN</th>
+          <th>TN</th>
+          <th>PN</th>
           <th>NA</th>
           <th>ภาระงาน % (Productivity)</th>
           <th>จัดการ</th>
@@ -282,9 +283,9 @@
       บุคลากร (Staff) & ภาระงาน
     </div>
     
-    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 1.5rem;">
       <div class="form-group">
-        <label class="form-label" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">HN (แพทย์)</label>
+        <label class="form-label">HN</label>
         <input type="number" class="form-input" id="fHN" min="0" value="0">
       </div>
       <div class="form-group">
@@ -292,8 +293,12 @@
         <input type="number" class="form-input" id="fRN" min="0" value="0">
       </div>
       <div class="form-group">
-        <label class="form-label">TN/PN</label>
+        <label class="form-label">TN</label>
         <input type="number" class="form-input" id="fTN" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">PN</label>
+        <input type="number" class="form-input" id="fPN" min="0" value="0">
       </div>
       <div class="form-group">
         <label class="form-label">NA</label>
