@@ -1,4 +1,6 @@
 // ==================== STATE ====================
+let currentPage = 1;      // หน้าปัจจุบัน
+const rowsPerPage = 20;   // จำนวนบรรทัดต่อหน้า
 let records = JSON.parse(localStorage.getItem('census_records') || '[]');
 let currentFilter = 'all';
 let currentWardFilter = 'all'; 
@@ -306,8 +308,8 @@ function renderTable() {
   const userRole = sessionStorage.getItem('userRole');
   const userWard = sessionStorage.getItem('userWard');
 
+  // 1. กรองข้อมูลตามเงื่อนไข (เหมือนเดิม)
   let filtered = currentFilter === 'all' ? records : records.filter(r => r.shift === currentFilter);
-  
   if (userRole !== 'admin') {
     filtered = filtered.filter(r => r.ward === userWard); 
   } else {
@@ -316,14 +318,29 @@ function renderTable() {
     }
   }
 
+  // 2. เรียงลำดับข้อมูลล่าสุดขึ้นก่อน
   filtered = [...filtered].sort((a,b) => b.date.localeCompare(a.date) || a.shift - b.shift);
 
-  if (!filtered.length) {
+  // --- เริ่มระบบแบ่งหน้า ---
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / rowsPerPage);
+  
+  // ตรวจสอบไม่ให้หน้าปัจจุบันเกินจำนวนหน้าที่มีจริง
+  if (currentPage > totalPages) currentPage = totalPages || 1;
+
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedItems = filtered.slice(startIndex, endIndex);
+
+  renderPagination(totalPages); // เรียกฟังก์ชันสร้างปุ่มเลขหน้า
+  // --- จบบระบบแบ่งหน้า ---
+
+  if (!paginatedItems.length) {
     tbody.innerHTML = `<tr><td colspan="18"><div class="empty-state"><div class="empty-icon">📝</div><p>ไม่มีข้อมูลตามเงื่อนไขที่เลือก</p></div></td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(r => `
+  tbody.innerHTML = paginatedItems.map(r => `
     <tr>
       <td>${formatDate(r.date)}</td>
       <td><span class="shift-badge shift-${r.shift}">${shiftLabel(r.shift)}</span></td>
@@ -341,7 +358,8 @@ function renderTable() {
       <td class="num-cell">${r.tn}</td>
       <td class="num-cell">${r.pn || 0}</td>
       <td class="num-cell">${r.na}</td>
-      <td class="num-cell" style="font-weight: 600; color: var(--teal);">${r.note || 0}</td> <td>
+      <td class="num-cell" style="font-weight: 600; color: var(--teal);">${r.note || 0}</td>
+      <td>
         <div class="action-group">
           <button class="btn-icon edit" onclick="openModal(${r.id})" title="แก้ไข">✏️</button>
           <button class="btn-icon del" onclick="deleteRecord(${r.id})" title="ลบ">🗑</button>
@@ -395,3 +413,32 @@ document.addEventListener('DOMContentLoaded', () => {
   
   checkAuth();
 });
+function renderPagination(totalPages) {
+  const container = document.getElementById('pagination');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (totalPages <= 1) return; // ถ้ามีหน้าเดียวไม่ต้องโชว์ปุ่ม
+
+  // สร้างปุ่มเลขหน้า
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.style.cssText = `
+      padding: 5px 12px;
+      border: 1px solid var(--teal);
+      background: ${i === currentPage ? 'var(--teal)' : 'white'};
+      color: ${i === currentPage ? 'white' : 'var(--teal)'};
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    `;
+    btn.onclick = () => {
+      currentPage = i;
+      renderTable();
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // เลื่อนขึ้นบนเมื่อเปลี่ยนหน้า
+    };
+    container.appendChild(btn);
+  }
+}
