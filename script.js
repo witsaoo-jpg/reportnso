@@ -110,12 +110,18 @@ function initApp() {
   updateHeaderDate();
   setInterval(updateHeaderDate, 1000);
   
-  // บังคับให้สถานะเป็น "เชื่อมต่อแล้ว" ตลอดเวลา
-  // (ถ้าเอา ID gsDot ออกจาก HTML แล้วก็สามารถลบฟังก์ชันบรรทัดนี้ได้ครับ)
   if(document.getElementById('gsDot')) {
     document.getElementById('gsDot').className = 'gs-dot connected';
-    document.getElementById('gsLabel').textContent = 'เชื่อมต่อ Google Sheets แล้ว';
   }
+  
+  // โหลดข้อมูลลงตารางเบื้องต้นจากความจำเครื่องก่อน
+  renderTable();
+  updateStats();
+  document.getElementById('fDate').valueAsDate = new Date();
+
+  // 🌟 สั่งให้ไปดึงข้อมูลล่าสุดจาก Google Sheets มาอัปเดตทับอีกที
+  loadFromGoogleSheets();
+}
   
   renderTable();
   updateStats();
