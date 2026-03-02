@@ -122,11 +122,6 @@ function initApp() {
   // 🌟 สั่งให้ไปดึงข้อมูลล่าสุดจาก Google Sheets มาอัปเดตทับอีกที
   loadFromGoogleSheets();
 }
-  
-  renderTable();
-  updateStats();
-  document.getElementById('fDate').valueAsDate = new Date();
-}
 
 function updateHeaderDate() {
   const now = new Date();
@@ -152,6 +147,34 @@ async function syncToGoogleSheets() {
     showToast('Sync ไป Google Sheets สำเร็จ ✓', 'success');
   } catch (e) {
     showToast('Sync สำเร็จ (no-cors mode) ✓', 'success');
+  }
+}
+
+// ฟังก์ชันสำหรับดึงข้อมูลจาก Google Sheets กลับมาแสดง
+async function loadFromGoogleSheets() {
+  try {
+    if(document.getElementById('gsLabel')) {
+      document.getElementById('gsLabel').textContent = 'กำลังโหลดข้อมูลล่าสุด...';
+    }
+    
+    const res = await fetch(GOOGLE_SCRIPT_URL);
+    const data = await res.json();
+    
+    if (data && Array.isArray(data)) {
+      records = data; // อัปเดตข้อมูลในเครื่องให้ตรงกับ Google Sheets
+      localStorage.setItem('census_records', JSON.stringify(records));
+      renderTable();
+      updateStats();
+    }
+    
+    if(document.getElementById('gsLabel')) {
+      document.getElementById('gsLabel').textContent = 'เชื่อมต่อ Google Sheets แล้ว';
+    }
+  } catch (e) {
+    console.error('Load Error:', e);
+    if(document.getElementById('gsLabel')) {
+      document.getElementById('gsLabel').textContent = 'ออฟไลน์ (แสดงข้อมูลในเครื่อง)';
+    }
   }
 }
 
@@ -399,30 +422,3 @@ document.addEventListener('DOMContentLoaded', () => {
   
   checkAuth();
 });
-// ฟังก์ชันสำหรับดึงข้อมูลจาก Google Sheets กลับมาแสดง
-async function loadFromGoogleSheets() {
-  try {
-    if(document.getElementById('gsLabel')) {
-      document.getElementById('gsLabel').textContent = 'กำลังโหลดข้อมูลล่าสุด...';
-    }
-    
-    const res = await fetch(GOOGLE_SCRIPT_URL);
-    const data = await res.json();
-    
-    if (data && Array.isArray(data)) {
-      records = data; // อัปเดตข้อมูลในเครื่องให้ตรงกับ Google Sheets
-      localStorage.setItem('census_records', JSON.stringify(records));
-      renderTable();
-      updateStats();
-    }
-    
-    if(document.getElementById('gsLabel')) {
-      document.getElementById('gsLabel').textContent = 'อัปเดตข้อมูลล่าสุดแล้ว ✓';
-    }
-  } catch (e) {
-    console.error('Load Error:', e);
-    if(document.getElementById('gsLabel')) {
-      document.getElementById('gsLabel').textContent = 'ออฟไลน์ (แสดงข้อมูลในเครื่อง)';
-    }
-  }
-}
