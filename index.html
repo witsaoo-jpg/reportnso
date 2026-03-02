@@ -283,30 +283,45 @@
       บุคลากร (Staff) & ภาระงาน
     </div>
     
-    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 1.5rem;">
+    <style>
+      .responsive-staff-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr)); /* มือถือ: โชว์ 3 ช่อง 2 บรรทัด */
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+      }
+      /* ถ้าจอใหญ่กว่า 600px (เช่น แท็บเล็ต, คอม) ให้โชว์ 6 ช่องบรรทัดเดียว */
+      @media (min-width: 600px) {
+        .responsive-staff-grid {
+          grid-template-columns: repeat(6, minmax(0, 1fr)); 
+        }
+      }
+    </style>
+
+    <div class="responsive-staff-grid">
       <div class="form-group">
-        <label class="form-label">HN</label>
-        <input type="number" class="form-input" id="fHN" min="0" value="0">
+        <label class="form-label" style="text-align: center;">HN</label>
+        <input type="number" class="form-input" id="fHN" min="0" value="0" style="text-align: center;">
       </div>
       <div class="form-group">
-        <label class="form-label">RN</label>
-        <input type="number" class="form-input" id="fRN" min="0" value="0">
+        <label class="form-label" style="text-align: center;">RN</label>
+        <input type="number" class="form-input" id="fRN" min="0" value="0" style="text-align: center;">
       </div>
       <div class="form-group">
-        <label class="form-label">TN</label>
-        <input type="number" class="form-input" id="fTN" min="0" value="0">
+        <label class="form-label" style="text-align: center;">TN</label>
+        <input type="number" class="form-input" id="fTN" min="0" value="0" style="text-align: center;">
       </div>
       <div class="form-group">
-        <label class="form-label">PN</label>
-        <input type="number" class="form-input" id="fPN" min="0" value="0">
+        <label class="form-label" style="text-align: center;">PN</label>
+        <input type="number" class="form-input" id="fPN" min="0" value="0" style="text-align: center;">
       </div>
       <div class="form-group">
-        <label class="form-label">NA</label>
-        <input type="number" class="form-input" id="fNA" min="0" value="0">
+        <label class="form-label" style="text-align: center;">NA</label>
+        <input type="number" class="form-input" id="fNA" min="0" value="0" style="text-align: center;">
       </div>
-    <div class="form-group">
-        <label class="form-label">ภาระงาน</label>
-        <input type="number" class="form-input" id="fNote" min="0" value="0">
+      <div class="form-group">
+        <label class="form-label" style="text-align: center;">ภาระงาน</label>
+        <input type="number" class="form-input" id="fNote" min="0" value="0" style="text-align: center;">
       </div>
     </div>
     
