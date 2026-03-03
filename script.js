@@ -235,12 +235,13 @@ function openModal(id = null) {
     document.getElementById('fPN').value = r.pn || 0; 
     document.getElementById('fNA').value = r.na;
     document.getElementById('fNote').value = r.note || 0; 
-  } else {
+} else {
     document.getElementById('fDate').valueAsDate = new Date();
     ['fBefore','fAdmit','fDischarge','fTransIn','fTransOut','fDeath','fRemain','fBed','fHN','fRN','fTN','fPN','fNA','fNote'].forEach(id => {
       document.getElementById(id).value = 0;
     });
-    document.getElementById('fShift').value = '1';
+    // เปลี่ยนค่าเริ่มต้นตรงนี้เป็น 3 (เวรดึก)
+    document.getElementById('fShift').value = '3'; 
     wardSelect.value = userRole === 'admin' ? '' : userWard;
   }
 
@@ -356,8 +357,10 @@ function renderTable() {
     }
   }
 
-  // 3. เรียงวันที่ใหม่ล่าสุดขึ้นก่อน
-  filtered = [...filtered].sort((a,b) => b.date.localeCompare(a.date) || a.shift - b.shift);
+ 
+  // 3. เรียงวันที่ใหม่ล่าสุดขึ้นก่อน และเรียงเวรตามลำดับเวลา (ดึก=1, เช้า=2, บ่าย=3)
+  const shiftOrder = { '3': 1, '1': 2, '2': 3 }; 
+  filtered = [...filtered].sort((a,b) => b.date.localeCompare(a.date) || shiftOrder[a.shift] - shiftOrder[b.shift]);
 
   // --- เริ่มระบบแบ่งหน้า ---
   const totalItems = filtered.length;
