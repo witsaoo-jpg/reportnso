@@ -85,71 +85,76 @@
       <button class="btn-add" id="btnAddRecord" onclick="openModal()">＋ เพิ่มบันทึก</button>
     </div>
 
-    <div id="adminFilters" style="display: none; width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 5px; flex-wrap: wrap; gap: 12px; align-items: center;">
+<div id="adminFilters" style="display: none; width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px; margin-top: 5px; flex-wrap: wrap; gap: 15px; align-items: center;">
       <div style="font-size: 0.85rem; font-weight: 700; color: var(--teal); width: 100%; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;">
         <span>⚙️ Admin Dashboard (เครื่องมือกรองข้อมูล)</span>
       </div>
       
-      <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; background: white; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
-        <label style="font-size: 0.75rem; font-weight: 600;">ช่วงวันที่:</label>
-        <input type="date" id="adminStartDate" style="border: none; outline: none; font-size: 0.75rem; color: #334155; cursor: pointer;" onchange="filterAdmin()">
-        <label style="font-size: 0.75rem; font-weight: 600; color: #94a3b8;">ถึง</label>
-        <input type="date" id="adminEndDate" style="border: none; outline: none; font-size: 0.75rem; color: #334155; cursor: pointer;" onchange="filterAdmin()">
-        <button onclick="clearAdminDate()" style="border: none; background: #fee2e2; color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">ล้างค่า</button>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+        <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1;">ช่วงวันที่:</label>
+        <input type="date" id="adminStartDate" style="border: none; outline: none; font-size: 0.75rem; color: #fff; background: transparent; cursor: pointer; color-scheme: dark;" onchange="filterAdmin()">
+        <label style="font-size: 0.75rem; font-weight: 600; color: #64748b;">ถึง</label>
+        <input type="date" id="adminEndDate" style="border: none; outline: none; font-size: 0.75rem; color: #fff; background: transparent; cursor: pointer; color-scheme: dark;" onchange="filterAdmin()">
+        <button onclick="clearAdminDate()" style="border: none; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; margin-left: 5px;">ล้างค่า</button>
       </div>
 
-      <select id="adminGroupFilter" class="form-select" style="padding: 6px 10px; font-size: 0.75rem; width: auto; min-width: 150px; cursor: pointer;" onchange="filterAdmin()">
-        <option value="all">📁 ทุกกลุ่มงาน</option>
-        <option value="อายุรกรรม">กลุ่มงานอายุรกรรม</option>
-        <option value="ศัลยกรรม">กลุ่มงานศัลยกรรม</option>
-        <option value="สูติ-นรีเวช">กลุ่มงานสูติ-นรีเวช</option>
-        <option value="ออร์โธปิดิกส์">กลุ่มงานออร์โธปิดิกส์</option>
-        <option value="โสต ศอ นาสิก จักษุ">กลุ่มงาน โสต ศอ นาสิก จักษุ</option>
-      </select>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1;">กลุ่มงาน:</label>
+        <select id="adminGroupFilter" class="form-select" style="padding: 6px 10px; font-size: 0.75rem; width: auto; min-width: 150px; cursor: pointer; background-color: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);" onchange="filterAdmin()">
+          <option value="all" style="color: black;">📁 ทุกกลุ่มงาน</option>
+          <option value="อายุรกรรม" style="color: black;">กลุ่มงานอายุรกรรม</option>
+          <option value="ศัลยกรรม" style="color: black;">กลุ่มงานศัลยกรรม</option>
+          <option value="สูติ-นรีเวช" style="color: black;">กลุ่มงานสูติ-นรีเวช</option>
+          <option value="ออร์โธปิดิกส์" style="color: black;">กลุ่มงานออร์โธปิดิกส์</option>
+          <option value="โสต ศอ นาสิก จักษุ" style="color: black;">กลุ่มงาน โสต ศอ นาสิก จักษุ</option>
+        </select>
+      </div>
 
-      <select id="adminWardFilter" class="form-select" style="padding: 6px 10px; font-size: 0.75rem; width: auto; min-width: 150px; cursor: pointer;" onchange="filterAdmin()">
-        <option value="all">🏥 ทุกหน่วยงาน</option>
-        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยอายุรกรรม">
-          <option value="หอผู้ป่วย สก.3">หอผู้ป่วย สก.3</option>
-          <option value="หอผู้ป่วย สก.4">หอผู้ป่วย สก.4</option>
-          <option value="หอผู้ป่วย สก.5">หอผู้ป่วย สก.5</option>
-          <option value="หอผู้ป่วย สก.6">หอผู้ป่วย สก.6</option>
-          <option value="หอผู้ป่วยสงฆ์อาพาธ">หอผู้ป่วยสงฆ์อาพาธ</option>
-          <option value="หอผู้ป่วยสงฆ์พิเศษ 2+3">หอผู้ป่วยสงฆ์พิเศษ 2+3</option>
-          <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1</option>
-          <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2</option>
-          <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง">หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง</option>
-          <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน">หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน</option>
-          <option value="หอผู้ป่วย Low Immune ธนจ.4">หอผู้ป่วย Low Immune ธนจ.4</option>
-        </optgroup>
-        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยศัลยกรรม">
-          <option value="หอผู้ป่วยชลาทิศ 1">หอผู้ป่วยชลาทิศ 1</option>
-          <option value="หอผู้ป่วยชลาทิศ 2">หอผู้ป่วยชลาทิศ 2</option>
-          <option value="หอผู้ป่วยชลาทิศ 3">หอผู้ป่วยชลาทิศ 3</option>
-          <option value="หอผู้ป่วยชลาทิศ 4">หอผู้ป่วยชลาทิศ 4</option>
-          <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.7">หอผู้ป่วยพิเศษศัลยกรรม ฉ.7</option>
-          <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.8">หอผู้ป่วยพิเศษศัลยกรรม ฉ.8</option>
-          <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.9">หอผู้ป่วยพิเศษศัลยกรรม Ex.9</option>
-          <option value="หอผู้ป่วยแผลไหม้">หอผู้ป่วยแผลไหม้</option>
-          <option value="หอผู้ป่วยเคมีบำบัด">หอผู้ป่วยเคมีบำบัด</option>
-        </optgroup>
-        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยสูติ-นรีเวช">
-          <option value="หอผู้ป่วยหลังคลอด">หอผู้ป่วยหลังคลอด</option>
-          <option value="หอผู้ป่วยนรีเวช ชลารักษ์4">หอผู้ป่วยนรีเวช ชลารักษ์4</option>
-          <option value="หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4">หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4</option>
-        </optgroup>
-        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยออร์โธปิดิกส์">
-          <option value="หอผู้ป่วยกระดูกชาย">หอผู้ป่วยกระดูกชาย</option>
-          <option value="หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง">หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง</option>
-          <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.8">หอผู้ป่วยพิเศษศัลยกรรม Ex.8</option>
-        </optgroup>
-        <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วย โสต ศอ นาสิก จักษุ">
-          <option value="หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3">หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3</option>
-          <option value="หอผู้ป่วยพิเศษ EENT">หอผู้ป่วยพิเศษ EENT</option>
-        </optgroup>
-      </select>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1;">หน่วยงาน:</label>
+        <select id="adminWardFilter" class="form-select" style="padding: 6px 10px; font-size: 0.75rem; width: auto; min-width: 150px; cursor: pointer; background-color: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);" onchange="filterAdmin()">
+          <option value="all" style="color: black;">🏥 ทุกหน่วยงาน</option>
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยอายุรกรรม" style="color: black;">
+            <option value="หอผู้ป่วย สก.3">หอผู้ป่วย สก.3</option>
+            <option value="หอผู้ป่วย สก.4">หอผู้ป่วย สก.4</option>
+            <option value="หอผู้ป่วย สก.5">หอผู้ป่วย สก.5</option>
+            <option value="หอผู้ป่วย สก.6">หอผู้ป่วย สก.6</option>
+            <option value="หอผู้ป่วยสงฆ์อาพาธ">หอผู้ป่วยสงฆ์อาพาธ</option>
+            <option value="หอผู้ป่วยสงฆ์พิเศษ 2+3">หอผู้ป่วยสงฆ์พิเศษ 2+3</option>
+            <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1</option>
+            <option value="หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2">หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2</option>
+            <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง">หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง</option>
+            <option value="หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน">หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน</option>
+            <option value="หอผู้ป่วย Low Immune ธนจ.4">หอผู้ป่วย Low Immune ธนจ.4</option>
+          </optgroup>
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยศัลยกรรม" style="color: black;">
+            <option value="หอผู้ป่วยชลาทิศ 1">หอผู้ป่วยชลาทิศ 1</option>
+            <option value="หอผู้ป่วยชลาทิศ 2">หอผู้ป่วยชลาทิศ 2</option>
+            <option value="หอผู้ป่วยชลาทิศ 3">หอผู้ป่วยชลาทิศ 3</option>
+            <option value="หอผู้ป่วยชลาทิศ 4">หอผู้ป่วยชลาทิศ 4</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.7">หอผู้ป่วยพิเศษศัลยกรรม ฉ.7</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม ฉ.8">หอผู้ป่วยพิเศษศัลยกรรม ฉ.8</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.9">หอผู้ป่วยพิเศษศัลยกรรม Ex.9</option>
+            <option value="หอผู้ป่วยแผลไหม้">หอผู้ป่วยแผลไหม้</option>
+            <option value="หอผู้ป่วยเคมีบำบัด">หอผู้ป่วยเคมีบำบัด</option>
+          </optgroup>
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยสูติ-นรีเวช" style="color: black;">
+            <option value="หอผู้ป่วยหลังคลอด">หอผู้ป่วยหลังคลอด</option>
+            <option value="หอผู้ป่วยนรีเวช ชลารักษ์4">หอผู้ป่วยนรีเวช ชลารักษ์4</option>
+            <option value="หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4">หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4</option>
+          </optgroup>
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยออร์โธปิดิกส์" style="color: black;">
+            <option value="หอผู้ป่วยกระดูกชาย">หอผู้ป่วยกระดูกชาย</option>
+            <option value="หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง">หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง</option>
+            <option value="หอผู้ป่วยพิเศษศัลยกรรม Ex.8">หอผู้ป่วยพิเศษศัลยกรรม Ex.8</option>
+          </optgroup>
+          <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วย โสต ศอ นาสิก จักษุ" style="color: black;">
+            <option value="หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3">หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3</option>
+            <option value="หอผู้ป่วยพิเศษ EENT">หอผู้ป่วยพิเศษ EENT</option>
+          </optgroup>
+        </select>
+      </div>
     </div>
-  </div>
      <div id="adminDateFilterWrap" style="display:none; align-items: center; gap: 5px;">
         <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">วันที่:</label>
         <input type="date" id="adminDateFilter" class="form-input" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; width: auto; border-color: var(--teal);" onchange="filterAdminDate(this.value)">
