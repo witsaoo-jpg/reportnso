@@ -230,7 +230,7 @@
       
       <div class="form-group full">
         <label class="form-label">หน่วยงาน / วอร์ด *</label>
-        <select class="form-select" id="fWard">
+        <select class="form-select" id="fWard" onchange="autoFillBed()">
           <option value="" disabled selected>-- กรุณาเลือกหน่วยงาน --</option>
           
           <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยอายุรกรรม">
@@ -314,7 +314,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">จำนวนเตียง</label>
-        <input type="number" class="form-input" id="fBed" min="0" value="0">
+        <input type="number" class="form-input" id="fBed" min="0" value="0" readonly style="background-color: #f8fafc; color: #64748b; border-color: #cbd5e1; cursor: not-allowed;">
       </div>
     </div>
 
