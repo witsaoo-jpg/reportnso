@@ -73,18 +73,42 @@
     </div>
   </div>
 
- <div class="toolbar">
-    <div class="toolbar-left">
+<div class="toolbar" style="flex-wrap: wrap; gap: 1rem;">
+    <div class="toolbar-left" style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
       <div class="section-title">📋 <span>บันทึกออนไลน์</span></div>
       <div class="filter-group">
-        <button class="filter-btn active" onclick="filterShift('all', this)">ทั้งหมด (เวลา)</button>
+        <button class="filter-btn active" onclick="filterShift('all', this)">ทั้งหมด</button>
         <button class="filter-btn" onclick="filterShift('1', this)">เวรเช้า (08-16)</button>
         <button class="filter-btn" onclick="filterShift('2', this)">เวรบ่าย (16-24)</button>
         <button class="filter-btn" onclick="filterShift('3', this)">เวรดึก (00-08)</button>
       </div>
+      <button class="btn-add" id="btnAddRecord" onclick="openModal()">＋ เพิ่มบันทึก</button>
+    </div>
+
+    <div id="adminFilters" style="display: none; width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 5px; flex-wrap: wrap; gap: 12px; align-items: center;">
+      <div style="font-size: 0.85rem; font-weight: 700; color: var(--teal); width: 100%; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;">
+        <span>⚙️ Admin Dashboard (เครื่องมือกรองข้อมูล)</span>
+      </div>
       
-      <select id="adminWardFilter" class="form-select" style="display:none; padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; width: auto; max-width: 200px; border-color: var(--teal);" onchange="filterWard(this.value)">
-        <option value="all">🏥 ดูทุกหน่วยงาน</option>
+      <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; background: white; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+        <label style="font-size: 0.75rem; font-weight: 600;">ช่วงวันที่:</label>
+        <input type="date" id="adminStartDate" style="border: none; outline: none; font-size: 0.75rem; color: #334155; cursor: pointer;" onchange="filterAdmin()">
+        <label style="font-size: 0.75rem; font-weight: 600; color: #94a3b8;">ถึง</label>
+        <input type="date" id="adminEndDate" style="border: none; outline: none; font-size: 0.75rem; color: #334155; cursor: pointer;" onchange="filterAdmin()">
+        <button onclick="clearAdminDate()" style="border: none; background: #fee2e2; color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">ล้างค่า</button>
+      </div>
+
+      <select id="adminGroupFilter" class="form-select" style="padding: 6px 10px; font-size: 0.75rem; width: auto; min-width: 150px; cursor: pointer;" onchange="filterAdmin()">
+        <option value="all">📁 ทุกกลุ่มงาน</option>
+        <option value="อายุรกรรม">กลุ่มงานอายุรกรรม</option>
+        <option value="ศัลยกรรม">กลุ่มงานศัลยกรรม</option>
+        <option value="สูติ-นรีเวช">กลุ่มงานสูติ-นรีเวช</option>
+        <option value="ออร์โธปิดิกส์">กลุ่มงานออร์โธปิดิกส์</option>
+        <option value="โสต ศอ นาสิก จักษุ">กลุ่มงาน โสต ศอ นาสิก จักษุ</option>
+      </select>
+
+      <select id="adminWardFilter" class="form-select" style="padding: 6px 10px; font-size: 0.75rem; width: auto; min-width: 150px; cursor: pointer;" onchange="filterAdmin()">
+        <option value="all">🏥 ทุกหน่วยงาน</option>
         <optgroup label="📌 กลุ่มงานการพยาบาลผู้ป่วยอายุรกรรม">
           <option value="หอผู้ป่วย สก.3">หอผู้ป่วย สก.3</option>
           <option value="หอผู้ป่วย สก.4">หอผู้ป่วย สก.4</option>
@@ -125,6 +149,7 @@
         </optgroup>
       </select>
     </div>
+  </div>
      <div id="adminDateFilterWrap" style="display:none; align-items: center; gap: 5px;">
         <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">วันที่:</label>
         <input type="date" id="adminDateFilter" class="form-input" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; width: auto; border-color: var(--teal);" onchange="filterAdminDate(this.value)">
