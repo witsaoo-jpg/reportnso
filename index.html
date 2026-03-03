@@ -78,9 +78,9 @@
       <div class="section-title">📋 <span>บันทึกออนไลน์</span></div>
       <div class="filter-group">
         <button class="filter-btn active" onclick="filterShift('all', this)">ทั้งหมด</button>
+        <button class="filter-btn" onclick="filterShift('3', this)">เวรดึก (00-08)</button>
         <button class="filter-btn" onclick="filterShift('1', this)">เวรเช้า (08-16)</button>
         <button class="filter-btn" onclick="filterShift('2', this)">เวรบ่าย (16-24)</button>
-        <button class="filter-btn" onclick="filterShift('3', this)">เวรดึก (00-08)</button>
       </div>
       <button class="btn-add" id="btnAddRecord" onclick="openModal()">＋ เพิ่มบันทึก</button>
     </div>
@@ -222,9 +222,9 @@
       <div class="form-group">
         <label class="form-label">เวร *</label>
         <select class="form-select" id="fShift">
+          <option value="3">เวรดึก (00:00–08:00 น.)</option>
           <option value="1">เวรเช้า (08:00–16:00 น.)</option>
           <option value="2">เวรบ่าย (16:00–24:00 น.)</option>
-          <option value="3">เวรดึก (00:00–08:00 น.)</option>
         </select>
       </div>
       
