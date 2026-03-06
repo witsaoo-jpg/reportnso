@@ -7,7 +7,7 @@ let editingId = null;
 let currentPage = 1;
 const rowsPerPage = 20;
 
-// สำหรับ Admin Dashboard
+// สำหรับ Dashboard & Print Filters
 let currentAdminGroup = 'all';
 let currentWardFilter = 'all';
 let startDate = '';
@@ -17,7 +17,7 @@ let endDate = '';
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdiRVVO1pICoE1ELZESJdFtHq-X2v3IR4IXHAvdWaDZdgGH3wZUxP9cyvSkDi5ixc9Rg/exec";
 const GOOGLE_SHEET_NAME = "Census";
 
-// จัดกลุ่มงานอัตโนมัติ (อ้างอิงรายชื่อเพื่อใช้กรองข้อมูล)
+// ==================== WARD GROUPS & BEDS DATABASE ====================
 const WARD_GROUPS = {
   "อายุรกรรม": ["หอผู้ป่วย สก.3", "หอผู้ป่วย สก.4", "หอผู้ป่วย สก.5", "หอผู้ป่วย สก.6", "หอผู้ป่วยสงฆ์อาพาธ", "หอผู้ป่วยสงฆ์พิเศษ 2+3", "หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1", "หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2", "หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง", "หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน", "หอผู้ป่วย Low Immune ธนจ.4"],
   "ศัลยกรรม": ["หอผู้ป่วยชลาทิศ 1", "หอผู้ป่วยชลาทิศ 2", "หอผู้ป่วยชลาทิศ 3", "หอผู้ป่วยชลาทิศ 4", "หอผู้ป่วยพิเศษศัลยกรรม ฉ.7", "หอผู้ป่วยพิเศษศัลยกรรม ฉ.8", "หอผู้ป่วยพิเศษศัลยกรรม Ex.9", "หอผู้ป่วยแผลไหม้", "หอผู้ป่วยเคมีบำบัด"],
@@ -25,49 +25,15 @@ const WARD_GROUPS = {
   "ออร์โธปิดิกส์": ["หอผู้ป่วยกระดูกชาย", "หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง", "หอผู้ป่วยพิเศษศัลยกรรม Ex.8"],
   "โสต ศอ นาสิก จักษุ": ["หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3", "หอผู้ป่วยพิเศษ EENT"]
 };
-// ==================== WARD BEDS DATABASE ====================
-// กำหนดจำนวนเตียงคงที่ของแต่ละหน่วยงาน (แก้ไขตัวเลขด้านหลังให้ตรงกับความเป็นจริงได้เลยครับ)
+
 const WARD_BEDS = {
-  // กลุ่มอายุรกรรม
-  "หอผู้ป่วย สก.3": 30,
-  "หอผู้ป่วย สก.4": 30,
-  "หอผู้ป่วย สก.5": 30,
-  "หอผู้ป่วย สก.6": 30,
-  "หอผู้ป่วยสงฆ์อาพาธ": 20,
-  "หอผู้ป่วยสงฆ์พิเศษ 2+3": 15,
-  "หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1": 24,
-  "หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2": 24,
-  "หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง": 12,
-  "หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน": 12,
-  "หอผู้ป่วย Low Immune ธนจ.4": 10,
-  
-  // กลุ่มศัลยกรรม
-  "หอผู้ป่วยชลาทิศ 1": 30,
-  "หอผู้ป่วยชลาทิศ 2": 32,
-  "หอผู้ป่วยชลาทิศ 3": 32,
-  "หอผู้ป่วยชลาทิศ 4": 30,
-  "หอผู้ป่วยพิเศษศัลยกรรม ฉ.7": 14,
-  "หอผู้ป่วยพิเศษศัลยกรรม ฉ.8": 14,
-  "หอผู้ป่วยพิเศษศัลยกรรม Ex.9": 10,
-  "หอผู้ป่วยแผลไหม้": 8,
-  "หอผู้ป่วยเคมีบำบัด": 25,
-  
-  // กลุ่มสูติ-นรีเวช
-  "หอผู้ป่วยหลังคลอด": 40,
-  "หอผู้ป่วยนรีเวช ชลารักษ์4": 30,
-  "หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4": 15,
-  
-  // กลุ่มออร์โธปิดิกส์
-  "หอผู้ป่วยกระดูกชาย": 35,
-  "หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง": 35,
-  "หอผู้ป่วยพิเศษศัลยกรรม Ex.8": 14,
-  
-  // กลุ่ม โสต ศอ นาสิก จักษุ
-  "หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3": 30,
-  "หอผู้ป่วยพิเศษ EENT": 12
+  "หอผู้ป่วย สก.3": 30, "หอผู้ป่วย สก.4": 30, "หอผู้ป่วย สก.5": 30, "หอผู้ป่วย สก.6": 30, "หอผู้ป่วยสงฆ์อาพาธ": 20, "หอผู้ป่วยสงฆ์พิเศษ 2+3": 15, "หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 1": 24, "หอผู้ป่วยสามัญติดเชื้อ ธารน้ำใจ 2": 24, "หอผู้ป่วยพิเศษอายุรกรรมชลาทรล่าง": 12, "หอผู้ป่วยพิเศษอายุรกรรมชลาทรบน": 12, "หอผู้ป่วย Low Immune ธนจ.4": 10,
+  "หอผู้ป่วยชลาทิศ 1": 32, "หอผู้ป่วยชลาทิศ 2": 32, "หอผู้ป่วยชลาทิศ 3": 32, "หอผู้ป่วยชลาทิศ 4": 32, "หอผู้ป่วยพิเศษศัลยกรรม ฉ.7": 14, "หอผู้ป่วยพิเศษศัลยกรรม ฉ.8": 14, "หอผู้ป่วยพิเศษศัลยกรรม Ex.9": 10, "หอผู้ป่วยแผลไหม้": 8, "หอผู้ป่วยเคมีบำบัด": 20,
+  "หอผู้ป่วยหลังคลอด": 40, "หอผู้ป่วยนรีเวช ชลารักษ์4": 30, "หอผู้ป่วยพิเศษนรีเวช ชลารักษ์4": 15,
+  "หอผู้ป่วยกระดูกชาย": 35, "หอผู้ป่วยศัลยกรรมอุบัติเหตุและกระดูกหญิง": 35, "หอผู้ป่วยพิเศษศัลยกรรม Ex.8": 14,
+  "หอผู้ป่วยสามัญ EENT และศัลยกรรมเด็ก ชว.3": 30, "หอผู้ป่วยพิเศษ EENT": 12
 };
 
-// ฟังก์ชันสำหรับดึงจำนวนเตียงมาใส่ให้อัตโนมัติ
 function autoFillBed() {
   const ward = document.getElementById('fWard').value;
   const bedInput = document.getElementById('fBed');
@@ -77,6 +43,7 @@ function autoFillBed() {
     bedInput.value = 0;
   }
 }
+
 // ==================== USERS DATABASE ====================
 const APP_USERS = {
   "admin": { pass: "1234", role: "admin", name: "ผู้ดูแลระบบกลาง", ward: "all" },
@@ -122,10 +89,10 @@ function checkAuth() {
     const role = sessionStorage.getItem('userRole');
     if (role === 'admin') {
       document.getElementById('btnAddRecord').style.display = 'none'; 
-      document.getElementById('adminFilters').style.display = 'flex'; // โชว์ Dashboard Admin
+      document.getElementById('adminOnlyFilters').style.display = 'flex'; 
     } else {
       document.getElementById('btnAddRecord').style.display = 'flex'; 
-      document.getElementById('adminFilters').style.display = 'none'; // ซ่อน Dashboard Admin
+      document.getElementById('adminOnlyFilters').style.display = 'none'; 
     }
 
     initApp();
@@ -171,7 +138,10 @@ function initApp() {
   
   renderTable();
   updateStats();
-  document.getElementById('fDate').valueAsDate = new Date();
+  
+  // ตั้งค่าวันที่ช่อง Filter ให้เป็นวันนี้เป็นค่าเริ่มต้น (ถ้าต้องการ)
+  // document.getElementById('filterStartDate').valueAsDate = new Date();
+  // document.getElementById('filterEndDate').valueAsDate = new Date();
 
   loadFromGoogleSheets();
 }
@@ -231,21 +201,53 @@ function shiftLabel(s) {
   return s == '1' ? 'เวรเช้า (08-16)' : s == '2' ? 'เวรบ่าย (16-24)' : 'เวรดึก (00-08)';
 }
 
-// ==================== DASHBOARD FILTERS ====================
-function filterAdmin() {
-  currentWardFilter = document.getElementById('adminWardFilter').value;
-  currentAdminGroup = document.getElementById('adminGroupFilter').value;
-  startDate = document.getElementById('adminStartDate').value;
-  endDate = document.getElementById('adminEndDate').value;
-  currentPage = 1; // รีเซ็ตหน้ากลับไปหน้าที่ 1
+// ==================== DASHBOARD & PRINT FILTERS ====================
+function applyFilters() {
+  const role = sessionStorage.getItem('userRole');
+  if (role === 'admin') {
+    currentWardFilter = document.getElementById('adminWardFilter').value;
+    currentAdminGroup = document.getElementById('adminGroupFilter').value;
+  }
+  startDate = document.getElementById('filterStartDate').value;
+  endDate = document.getElementById('filterEndDate').value;
+  
+  currentPage = 1; 
   renderTable();
   updateStats();
 }
 
-function clearAdminDate() {
-  document.getElementById('adminStartDate').value = '';
-  document.getElementById('adminEndDate').value = '';
-  filterAdmin();
+function clearDateFilter() {
+  document.getElementById('filterStartDate').value = '';
+  document.getElementById('filterEndDate').value = '';
+  applyFilters();
+}
+
+function printPDF() {
+  const role = sessionStorage.getItem('userRole');
+  const ward = sessionStorage.getItem('userWard');
+  const subtitle = document.getElementById('printSubtitle');
+  
+  let text = '';
+  if (role !== 'admin') {
+    text += `หน่วยงาน: ${ward} `;
+  } else {
+    if (currentWardFilter !== 'all') text += `หน่วยงาน: ${currentWardFilter} `;
+    else if (currentAdminGroup !== 'all') text += `กลุ่มงาน: ${currentAdminGroup} `;
+    else text += `ทุกหน่วยงาน `;
+  }
+
+  if (startDate && endDate) {
+    text += `| ตั้งแต่วันที่ ${formatDate(startDate)} ถึง ${formatDate(endDate)}`;
+  } else if (startDate) {
+    text += `| ตั้งแต่วันที่ ${formatDate(startDate)}`;
+  } else if (endDate) {
+    text += `| ถึงวันที่ ${formatDate(endDate)}`;
+  } else {
+    text += `| ทั้งหมด`;
+  }
+
+  subtitle.textContent = text;
+  window.print();
 }
 
 function filterShift(val, btn) {
@@ -286,15 +288,15 @@ function openModal(id = null) {
     document.getElementById('fPN').value = r.pn || 0; 
     document.getElementById('fNA').value = r.na;
     document.getElementById('fNote').value = r.note || 0; 
-} else {
+  } else {
     document.getElementById('fDate').valueAsDate = new Date();
     ['fBefore','fAdmit','fDischarge','fTransIn','fTransOut','fDeath','fRemain','fBed','fHN','fRN','fTN','fPN','fNA','fNote'].forEach(id => {
       document.getElementById(id).value = 0;
     });
-    document.getElementById('fShift').value = '3';
+    document.getElementById('fShift').value = '3'; // ค่าเริ่มต้นเป็น เวรดึก
     wardSelect.value = userRole === 'admin' ? '' : userWard;
     
-    // 🌟 สั่งให้ดึงเตียงอัตโนมัติเมื่อกดเพิ่มบันทึก
+    // ดึงจำนวนเตียงอัตโนมัติ
     autoFillBed();
   }
 
@@ -382,7 +384,7 @@ function deleteRecord(id) {
   syncToGoogleSheets();
 }
 
-// ==================== RENDER & PAGINATION ====================
+// ==================== RENDER ====================
 function renderTable() {
   const tbody = document.getElementById('tableBody');
   const userRole = sessionStorage.getItem('userRole');
@@ -391,7 +393,7 @@ function renderTable() {
   // 1. กรองตามเวร
   let filtered = currentFilter === 'all' ? records : records.filter(r => r.shift === currentFilter);
   
-  // 2. กรองตามสิทธิ์ Admin Dashboard
+  // 2. กรองตามสิทธิ์
   if (userRole !== 'admin') {
     filtered = filtered.filter(r => r.ward === userWard); 
   } else {
@@ -402,16 +404,17 @@ function renderTable() {
     if (currentWardFilter !== 'all') {
       filtered = filtered.filter(r => r.ward === currentWardFilter); 
     }
-    if (startDate) {
-      filtered = filtered.filter(r => r.date >= startDate);
-    }
-    if (endDate) {
-      filtered = filtered.filter(r => r.date <= endDate);
-    }
   }
 
- 
-  // 3. เรียงวันที่ใหม่ล่าสุดขึ้นก่อน และเรียงเวรตามลำดับเวลา (ดึก=1, เช้า=2, บ่าย=3)
+  // 3. กรองตามวันที่ 
+  if (startDate) {
+    filtered = filtered.filter(r => r.date >= startDate);
+  }
+  if (endDate) {
+    filtered = filtered.filter(r => r.date <= endDate);
+  }
+
+  // 4. เรียงข้อมูล (ดึก -> เช้า -> บ่าย)
   const shiftOrder = { '3': 1, '1': 2, '2': 3 }; 
   filtered = [...filtered].sort((a,b) => b.date.localeCompare(a.date) || shiftOrder[a.shift] - shiftOrder[b.shift]);
 
@@ -495,7 +498,6 @@ function formatDate(d) {
   return `${parts[2]}/${parts[1]}/${+parts[0]+543}`;
 }
 
-// อัปเดตยอดสถิติตามเงื่อนไขที่เลือก (Real-time)
 function updateStats() {
   const today = new Date().toISOString().split('T')[0];
   const userRole = sessionStorage.getItem('userRole');
@@ -505,7 +507,7 @@ function updateStats() {
   let isDateRanged = false;
   
   if (userRole !== 'admin') {
-    targetRecords = records.filter(r => r.ward === userWard && r.date === today);
+    targetRecords = records.filter(r => r.ward === userWard);
   } else {
     if (currentAdminGroup !== 'all') {
       const groupWards = WARD_GROUPS[currentAdminGroup] || [];
@@ -514,15 +516,14 @@ function updateStats() {
     if (currentWardFilter !== 'all') {
       targetRecords = targetRecords.filter(r => r.ward === currentWardFilter);
     }
-    
-    // ถ้าระบุช่วงวันที่ ให้รวมยอดตามช่วงนั้น แต่ถ้าไม่ได้ระบุให้โชว์ยอดของวันนี้
-    if (startDate || endDate) {
-      isDateRanged = true;
-      if (startDate) targetRecords = targetRecords.filter(r => r.date >= startDate);
-      if (endDate) targetRecords = targetRecords.filter(r => r.date <= endDate);
-    } else {
-      targetRecords = targetRecords.filter(r => r.date === today);
-    }
+  }
+
+  if (startDate || endDate) {
+    isDateRanged = true;
+    if (startDate) targetRecords = targetRecords.filter(r => r.date >= startDate);
+    if (endDate) targetRecords = targetRecords.filter(r => r.date <= endDate);
+  } else {
+    targetRecords = targetRecords.filter(r => r.date === today);
   }
 
   document.getElementById('statTotal').textContent = targetRecords.reduce((s,r) => s + r.remain, 0);
@@ -530,7 +531,6 @@ function updateStats() {
   document.getElementById('statDischarge').textContent = targetRecords.reduce((s,r) => s + r.discharge, 0);
   document.getElementById('statRecords').textContent = targetRecords.length;
 
-  // เปลี่ยนป้ายกำกับให้รู้ว่ากำลังดูยอดสรุปของวันไหน
   const statLabelTotal = document.querySelector('.stat-card.teal .stat-label');
   if (statLabelTotal) {
      statLabelTotal.textContent = isDateRanged ? 'ยอดรวม (ตามช่วงเวลาที่เลือก)' : 'ผู้ป่วยคงเหลือ (ทุกเวร วันนี้)';
